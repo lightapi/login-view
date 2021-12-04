@@ -14,7 +14,6 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import { FacebookLoginButton, GoogleLoginButton, GithubLoginButton } from 'react-social-login-buttons';
 import ErrorMessage from './ErrorMessage';
 import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
