@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGoogleLogin } from 'react-google-login';
+import { useGoogleLogin } from '@leecheuk/react-google-login';
 import { GoogleLoginButton } from 'react-social-login-buttons';
 
 const clientId = '654131058807-15p8l5r4ddlusbeavvhiin9rt2cuglh6.apps.googleusercontent.com';

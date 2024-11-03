@@ -1,8 +1,9 @@
-import React from 'react';
+import React from 'react'
 import { Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import ResetPassword from './components/ResetPassword';
 import ForgetPassword from './components/ForgetPassword';
+import './App.css'
 
 function App() {
   return (
@@ -14,4 +15,4 @@ function App() {
   )
 }
 
-export default App;
+export default App

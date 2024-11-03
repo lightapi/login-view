@@ -1,5 +1,5 @@
 import React from 'react';
-import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props'
+import FacebookLogin from '@greatsumini/react-facebook-login';
 import { FacebookLoginButton } from 'react-social-login-buttons';
 
 function FbLogin({onSuccess}) {
