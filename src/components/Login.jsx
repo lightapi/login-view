@@ -1,19 +1,13 @@
-import React,  {useState} from 'react';
+import React,  { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
+import {
+  Avatar, Button, CssBaseline, TextField, MenuItem, Select, FormControl,
+  InputLabel, FormControlLabel, Checkbox, Typography, Divider, List, ListItem,
+  ListItemText, Container
+} from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+
 import { makeStyles } from '@mui/styles';
-import Container from '@mui/material/Container';
 import ErrorMessage from './ErrorMessage';
 import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
@@ -35,7 +29,7 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: theme.palette.secondary.main,
   },
   form: {
-    width: '100%', // Fix IE 11 issue.
+    width: '100%',
     marginTop: theme.spacing(1),
   },
   submit: {
@@ -51,38 +45,33 @@ const useStyles = makeStyles(theme => ({
 function Login() {
   const classes = useStyles();
 
-  let search = window.location.search;
-  let params = new URLSearchParams(search);
-  //console.log("client_id = ", params.get('client_id'));
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [state] = useState(params.get('state') == null ? '' : params.get('state'));
-  const [clientId] = useState(params.get('client_id') == null ? '' : params.get('client_id'));
-  const [userType] = useState(params.get('user_type') == null ? '' : params.get('user_type'));
-  const [redirectUri] = useState(params.get('redirect_uri') == null ? '' : params.get('redirect_uri'));
+  const [state, setState] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [userType, setUserType] = useState('C');
+  const [redirectUri, setRedirectUri] = useState('');
   const [error, setError] = useState('');
   const [redirectUrl, setRedirectUrl] = useState(null);
   const [denyUrl, setDenyUrl] = useState(null);
   const [scopes, setScopes] = useState([]);
 
-  const handleChangeUsername = e => {
-    setUsername(e.target.value)
-  };
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setState(params.get('state') || '');
+    setClientId(params.get('client_id') || '');
+    setUserType(params.get('user_type') || 'C');
+    setRedirectUri(params.get('redirect_uri') || '');
+  }, []);
 
-  const handleChangePassword = e => {
-    setPassword(e.target.value)
-  };
-
-  const handleChangeRemember = e => {
-    setRemember(e.target.value)
-  };
+  const handleChange = setter => e => setter(e.target.value);
 
   const handleAccept = event => {
     event.preventDefault();
     //console.log("handleAccept is called");
     window.location.href = redirectUrl;
-  }
+  };
 
   const handleCancel = event => {
     event.preventDefault();
@@ -194,7 +183,8 @@ function Login() {
     //console.log(formData);
     const headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
-        ...(process.env.REACT_APP_SAAS_URL) && {'service_url': process.env.REACT_APP_SAAS_URL}
+        // as we are using light-gateway to route all requests, it is not necessary to have service_url in the header. 
+        // ...(process.env.REACT_APP_SAAS_URL) && {'service_url': process.env.REACT_APP_SAAS_URL}
     };
     //console.log(headers);
 
@@ -301,7 +291,7 @@ function Login() {
                 value={username}
                 autoComplete="username"
                 autoFocus
-                onChange={handleChangeUsername}
+                onChange={handleChange(setUsername)}
             />
             <TextField
                 variant="outlined"
@@ -314,36 +304,43 @@ function Login() {
                 type="password"
                 id="j_password"
                 autoComplete="password"
-                onChange={handleChangePassword}
+                onChange={handleChange(setPassword)}
             />
-            <TextField
-                name="state"
-                value={state}
-                type="hidden"
-                id="state"
+            <input
+              name="state"
+              value={state}
+              type="hidden"
+              id="state"
             />
-            <TextField
-                name="client_id"
-                value={clientId}
-                type="hidden"
-                id="client_id"
+            <input
+              name="client_id"
+              value={clientId}
+              type="hidden"
+              id="client_id"
             />
-            <TextField
-                name="user_type"
-                value={userType}
-                type="hidden"
+            <FormControl fullWidth>
+              <InputLabel id="user_type_label">User Type</InputLabel>
+              <Select
                 id="user_type"
-            />
-            <TextField
-                name="redirect_uri"
-                value={redirectUri}
-                type="hidden"
-                id="redirect_uri"
+                labelId="user_type_label"
+                value={userType}
+                label="User Type"
+                onChange={handleChange(setUserType)}
+              >
+                <MenuItem value={'C'}>Customer</MenuItem>
+                <MenuItem value={'E'}>Employee</MenuItem>
+              </Select>
+            </FormControl>
+            <input
+              name="redirect_uri"
+              value={redirectUri}
+              type="hidden"
+              id="redirect_uri"
             />
             <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}
                 label="Remember me"
-                onChange={handleChangeRemember}
+                onChange={handleChange(setRemember)}
             />
             <Button
                 type="submit"
