@@ -31,9 +31,15 @@ function GithubLogin({ onSuccess, onError }) {
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
 
-        // Generate a random state for CSRF protection
-        const state = Math.random().toString(36).substring(7);
-        localStorage.setItem('github_auth_state', state);
+        // Get the state from the query parameter
+        const queryParams = new URLSearchParams(window.location.search);
+        const state = queryParams.get('state');
+
+        // If no state is provided, we might want to log an error or handle it appropriately. 
+        // For now, we proceed, but the callback verification might fail if state is expected.
+        if (!state) {
+            console.warn("No state found in URL query parameters.");
+        }
 
         const url = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPE}&state=${state}`;
 
