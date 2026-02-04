@@ -1,4 +1,4 @@
-import React,  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Avatar, Button, CssBaseline, TextField, MenuItem, Select, FormControl,
@@ -11,6 +11,7 @@ import { makeStyles } from '@mui/styles';
 import ErrorMessage from './ErrorMessage';
 import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
+import GithubLogin from './GithubLogin';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -82,18 +83,18 @@ function Login() {
     let logoutPath = pathArray[0] + '//' + pathArray[2] + '/logout';
     //console.log("fetch url = ", logoutPath);
     // remove the server set cookies as the Javascript cannot access some of them. 
-    fetch(logoutPath, { credentials: 'include'})
-    .then(response => {
-      if(response.ok) {
-        window.location.href = denyUrl;
-      } else {
-        throw Error(response.statusText);
-      }
-    })
-    .catch(error => {
+    fetch(logoutPath, { credentials: 'include' })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = denyUrl;
+        } else {
+          throw Error(response.statusText);
+        }
+      })
+      .catch(error => {
         console.log("error=", error);
         setError(error.toString());
-    });
+      });
   }
 
   function ScopeItems() {
@@ -115,9 +116,37 @@ function Login() {
     let pathArray = document.referrer.split('/');
     let host = pathArray[0] + '//' + pathArray[2];
     console.log('host = ', host);
-    fetch(host + '/google?code=' + res.code, {redirect: 'follow', credentials: 'include'})
+    fetch(host + '/google?code=' + res.code, { redirect: 'follow', credentials: 'include' })
       .then(response => {
-        if(response.ok) {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .then(data => {
+        console.log("data =", data);
+        setRedirectUrl(data.redirectUri);
+        setDenyUrl(data.denyUri);
+        setScopes(data.scopes);
+      })
+      .catch(err => {
+        err.text().then(errorMessage => {
+          setError(errorMessage);
+        })
+      });
+  };
+
+  const onGithubSuccess = (res) => {
+    console.log('Github Login Success: authorization code:', res.code);
+    console.log('referrer: ', document.referrer);
+    let pathArray = document.referrer.split('/');
+    let host = pathArray[0] + '//' + pathArray[2];
+    console.log('host = ', host);
+    // Assuming the backend endpoint for GitHub is /github
+    fetch(host + '/github?code=' + res.code, { redirect: 'follow', credentials: 'include' })
+      .then(response => {
+        if (response.ok) {
           return response.json();
         } else {
           throw response;
@@ -142,19 +171,19 @@ function Login() {
     let pathArray = document.referrer.split('/');
     let host = pathArray[0] + '//' + pathArray[2];
     console.log('host = ', host);
-    fetch(host + '/facebook?accessToken=' + res.accessToken, {redirect: 'follow', credentials: 'include'})
+    fetch(host + '/facebook?accessToken=' + res.accessToken, { redirect: 'follow', credentials: 'include' })
       .then(response => {
-        if(response.ok) {
+        if (response.ok) {
           return response.json();
         } else {
           throw response;
         }
       })
       .then(data => {
-          console.log("data =", data);
-          setRedirectUrl(data.redirectUri);
-          setDenyUrl(data.denyUri);
-          setScopes(data.scopes);
+        console.log("data =", data);
+        setRedirectUrl(data.redirectUri);
+        setDenyUrl(data.denyUri);
+        setScopes(data.scopes);
       })
       .catch(err => {
         err.text().then(errorMessage => {
@@ -176,15 +205,15 @@ function Login() {
       client_id: clientId
     };
 
-    Object.assign(data, (state) && { state: state}, (userType) && {user_type: userType}, (redirectUri) && {redirect_uri: redirectUri})
+    Object.assign(data, (state) && { state: state }, (userType) && { user_type: userType }, (redirectUri) && { redirect_uri: redirectUri })
     //console.log("data = " + data);
     const formData = Object.keys(data).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key])).join('&');
 
     //console.log(formData);
     const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        // as we are using light-gateway to route all requests, it is not necessary to have service_url in the header. 
-        // ...(process.env.REACT_APP_SAAS_URL) && {'service_url': process.env.REACT_APP_SAAS_URL}
+      'Content-Type': 'application/x-www-form-urlencoded',
+      // as we are using light-gateway to route all requests, it is not necessary to have service_url in the header. 
+      // ...(process.env.REACT_APP_SAAS_URL) && {'service_url': process.env.REACT_APP_SAAS_URL}
     };
     //console.log(headers);
 
@@ -195,40 +224,40 @@ function Login() {
       headers: headers,
       body: formData
     })
-    .then(response => {
-      if (!response.ok) {
-        throw response;
-      }
-      return response.json();
-    })
-    .then(json => {
-      //console.log(json);
-      setRedirectUrl(json.redirectUri);
-      setDenyUrl(json.denyUri);
-      setScopes(json.scopes);
-    })
-    .catch(error => {
-        error.text().then(errorMessage => {
-        console.log("error=", errorMessage);
-        const data = {
-          email: username,
-          password: password
-        };
-        const cmd = {
-          host: 'lightapi.net',
-          service: 'user',
-          action: 'loginUser',
-          version: '0.1.0',
-          data: data
-        };
-        const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
-        const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
-        setError(message.replace('link', url));
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.json();
       })
-    });
+      .then(json => {
+        //console.log(json);
+        setRedirectUrl(json.redirectUri);
+        setDenyUrl(json.denyUri);
+        setScopes(json.scopes);
+      })
+      .catch(error => {
+        error.text().then(errorMessage => {
+          console.log("error=", errorMessage);
+          const data = {
+            email: username,
+            password: password
+          };
+          const cmd = {
+            host: 'lightapi.net',
+            service: 'user',
+            action: 'loginUser',
+            version: '0.1.0',
+            data: data
+          };
+          const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
+          const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
+          setError(message.replace('link', url));
+        })
+      });
   };
-  
-  if(redirectUrl !== null) {
+
+  if (redirectUrl !== null) {
     //console.log("display consent");
     //console.log(scopes);
     return (
@@ -238,13 +267,13 @@ function Login() {
           <form className={classes.form} noValidate onSubmit={handleAccept}>
             <Typography component="h1" variant="h5">
               Consent
-            </Typography>  
-            This application would like to access: 
-            <Divider/>
+            </Typography>
+            This application would like to access:
+            <Divider />
             <List component="nav" aria-label="secondary mailbox folders">
-              <ScopeItems/>
-             </List>
-            <Divider/>
+              <ScopeItems />
+            </List>
+            <Divider />
             <Button
               type="submit"
               variant="contained"
@@ -262,103 +291,104 @@ function Login() {
             >
               Accept
             </Button>
-          </form>  
-        </div>
-      </Container>  
-    )
-  } 
-
-  return (
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <div className={classes.paper}>
-          <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign in
-          </Typography>
-          <ErrorMessage error={error}/>
-          <form className={classes.form} noValidate onSubmit={handleSubmit}>
-            <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                id="j_username"
-                label="Email"
-                name="j_username"
-                value={username}
-                autoComplete="username"
-                autoFocus
-                onChange={handleChange(setUsername)}
-            />
-            <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="j_password"
-                value={password}
-                label="Password"
-                type="password"
-                id="j_password"
-                autoComplete="password"
-                onChange={handleChange(setPassword)}
-            />
-            <input
-              name="state"
-              value={state}
-              type="hidden"
-              id="state"
-            />
-            <input
-              name="client_id"
-              value={clientId}
-              type="hidden"
-              id="client_id"
-            />
-            <FormControl fullWidth>
-              <InputLabel id="user_type_label">User Type</InputLabel>
-              <Select
-                id="user_type"
-                labelId="user_type_label"
-                value={userType}
-                label="User Type"
-                onChange={handleChange(setUserType)}
-              >
-                <MenuItem value={'C'}>Customer</MenuItem>
-                <MenuItem value={'E'}>Employee</MenuItem>
-              </Select>
-            </FormControl>
-            <input
-              name="redirect_uri"
-              value={redirectUri}
-              type="hidden"
-              id="redirect_uri"
-            />
-            <FormControlLabel
-                control={<Checkbox value="remember" color="primary" />}
-                label="Remember me"
-                onChange={handleChange(setRemember)}
-            />
-            <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                className={classes.submit}
-            >
-              Sign In
-            </Button>
           </form>
-          <div>Forget your password? <Link to="/forget">Reset Here</Link></div>
-          <div className={classes.loginButtons}>
-            <GoogleLogin onSuccess={onGoogleSuccess}/>
-            <FbLogin onSuccess={onFacebookSuccess}/>
-          </div>
         </div>
       </Container>
+    )
+  }
+
+  return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <div className={classes.paper}>
+        <Avatar className={classes.avatar}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        <ErrorMessage error={error} />
+        <form className={classes.form} noValidate onSubmit={handleSubmit}>
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            id="j_username"
+            label="Email"
+            name="j_username"
+            value={username}
+            autoComplete="username"
+            autoFocus
+            onChange={handleChange(setUsername)}
+          />
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            name="j_password"
+            value={password}
+            label="Password"
+            type="password"
+            id="j_password"
+            autoComplete="password"
+            onChange={handleChange(setPassword)}
+          />
+          <input
+            name="state"
+            value={state}
+            type="hidden"
+            id="state"
+          />
+          <input
+            name="client_id"
+            value={clientId}
+            type="hidden"
+            id="client_id"
+          />
+          <FormControl fullWidth>
+            <InputLabel id="user_type_label">User Type</InputLabel>
+            <Select
+              id="user_type"
+              labelId="user_type_label"
+              value={userType}
+              label="User Type"
+              onChange={handleChange(setUserType)}
+            >
+              <MenuItem value={'C'}>Customer</MenuItem>
+              <MenuItem value={'E'}>Employee</MenuItem>
+            </Select>
+          </FormControl>
+          <input
+            name="redirect_uri"
+            value={redirectUri}
+            type="hidden"
+            id="redirect_uri"
+          />
+          <FormControlLabel
+            control={<Checkbox value="remember" color="primary" />}
+            label="Remember me"
+            onChange={handleChange(setRemember)}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary"
+            className={classes.submit}
+          >
+            Sign In
+          </Button>
+        </form>
+        <div>Forget your password? <Link to="/forget">Reset Here</Link></div>
+        <div className={classes.loginButtons}>
+          <GoogleLogin onSuccess={onGoogleSuccess} />
+          <FbLogin onSuccess={onFacebookSuccess} />
+          <GithubLogin onSuccess={onGithubSuccess} />
+        </div>
+      </div>
+    </Container>
   );
 }
 

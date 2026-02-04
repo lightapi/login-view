@@ -47,6 +47,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/github': {
+        target: 'https://local.lightapi.net',
+        changeOrigin: true,
+        secure: false,
+      },
     }
   },
   build: {
@@ -60,5 +65,5 @@ export default defineConfig({
         }
       }
     }
-  }  
+  }
 })

@@ -1,28 +1,23 @@
 import React from 'react';
-import { useGoogleLogin } from '@leecheuk/react-google-login';
+
+import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleLoginButton } from 'react-social-login-buttons';
 
-const clientId = '654131058807-15p8l5r4ddlusbeavvhiin9rt2cuglh6.apps.googleusercontent.com';
+function GoogleLogin({ onSuccess }) {
 
-function GoogleLogin({onSuccess}) {
-
-  const onFailure = (res) => {
-    console.log('Login failed: res:', res);
-    alert(
-      `Failed to login. Please ping this to support@lightapi.net`
-    );
-  };
-
-  const { signIn } = useGoogleLogin({
+  const login = useGoogleLogin({
     onSuccess,
-    onFailure,
-    clientId,
-    accessType: 'offline',
-    responseType: 'code'
+    onError: (res) => {
+      console.log('Login failed: res:', res);
+      alert(
+        `Failed to login. Please ping this to support@lightapi.net`
+      );
+    },
+    flow: 'auth-code',
   });
 
   return (
-    <GoogleLoginButton onClick={signIn} />
+    <GoogleLoginButton onClick={() => login()} />
   );
 }
 
