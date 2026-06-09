@@ -92,7 +92,7 @@ function Login() {
     const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
     setError(
       <span>
-        Login Failed! Click <a href={url}>here</a> to identify root cause.
+        Login Failed! <a href={url}>View root cause details</a>.
       </span>
     );
   };
