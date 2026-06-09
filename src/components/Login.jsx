@@ -58,6 +58,45 @@ function Login() {
   const [denyUrl, setDenyUrl] = useState(null);
   const [scopes, setScopes] = useState([]);
 
+  const getErrorMessageFallback = error => {
+    if (error && typeof error.status === 'number') {
+      return `${error.status} ${error.statusText || 'Request failed'}`;
+    }
+    return (error && (error.statusText || error.message)) || 'Request failed';
+  };
+
+  const getErrorMessage = error => {
+    const fallback = getErrorMessageFallback(error);
+    if (error && typeof error.text === 'function') {
+      try {
+        return error.text()
+          .then(errorMessage => errorMessage || fallback)
+          .catch(() => fallback);
+      } catch {
+        return Promise.resolve(fallback);
+      }
+    }
+    if (typeof error === 'string') {
+      return Promise.resolve(error || fallback);
+    }
+    return Promise.resolve(fallback);
+  };
+
+  const showLoginFailureLink = () => {
+    const cmd = {
+      host: 'lightapi.net',
+      service: 'user',
+      action: 'loginUser',
+      version: '0.1.0'
+    };
+    const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
+    setError(
+      <span>
+        Login Failed! <a href={url}>View root cause details</a>.
+      </span>
+    );
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setState(params.get('state') || '');
@@ -131,7 +170,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -159,7 +198,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -186,7 +225,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -237,22 +276,13 @@ function Login() {
         setScopes(json.scopes);
       })
       .catch(error => {
-        error.text().then(errorMessage => {
+        if (error && typeof error.text === 'function') {
+          showLoginFailureLink();
+          return;
+        }
+        getErrorMessage(error).then(errorMessage => {
           console.log("error=", errorMessage);
-          const data = {
-            email: username,
-            password: password
-          };
-          const cmd = {
-            host: 'lightapi.net',
-            service: 'user',
-            action: 'loginUser',
-            version: '0.1.0',
-            data: data
-          };
-          const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
-          const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
-          setError(message.replace('link', url));
+          setError(errorMessage);
         })
       });
   };
