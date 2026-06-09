@@ -65,34 +65,37 @@ function Login() {
     return (error && (error.statusText || error.message)) || 'Request failed';
   };
 
+  const escapeErrorMessage = value => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
   const getErrorMessage = error => {
     const fallback = getErrorMessageFallback(error);
+    const safeFallback = escapeErrorMessage(fallback);
     if (error && typeof error.text === 'function') {
       try {
         return error.text()
-          .then(errorMessage => errorMessage || fallback)
-          .catch(() => fallback);
+          .then(errorMessage => escapeErrorMessage(errorMessage || fallback))
+          .catch(() => safeFallback);
       } catch {
-        return Promise.resolve(fallback);
+        return Promise.resolve(safeFallback);
       }
     }
     if (typeof error === 'string') {
-      return Promise.resolve(error || fallback);
+      return Promise.resolve(escapeErrorMessage(error || fallback));
     }
-    return Promise.resolve(fallback);
+    return Promise.resolve(safeFallback);
   };
 
   const showLoginFailureLink = () => {
-    const data = {
-      email: username,
-      password: password
-    };
     const cmd = {
       host: 'lightapi.net',
       service: 'user',
       action: 'loginUser',
-      version: '0.1.0',
-      data: data
+      version: '0.1.0'
     };
     const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
     const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
@@ -134,7 +137,7 @@ function Login() {
       })
       .catch(error => {
         console.log("error=", error);
-        setError(error.toString());
+        setError(escapeErrorMessage(error.toString()));
       });
   }
 
