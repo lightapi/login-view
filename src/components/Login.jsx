@@ -58,6 +58,16 @@ function Login() {
   const [denyUrl, setDenyUrl] = useState(null);
   const [scopes, setScopes] = useState([]);
 
+  const getErrorMessage = error => {
+    if (error && typeof error.text === 'function') {
+      return error.text().catch(() => error.statusText || 'Request failed');
+    }
+    if (error && error.message) {
+      return Promise.resolve(error.message);
+    }
+    return Promise.resolve(String(error || 'Request failed'));
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setState(params.get('state') || '');
@@ -131,7 +141,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -159,7 +169,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -186,7 +196,7 @@ function Login() {
         setScopes(data.scopes);
       })
       .catch(err => {
-        err.text().then(errorMessage => {
+        getErrorMessage(err).then(errorMessage => {
           setError(errorMessage);
         })
       });
@@ -237,7 +247,7 @@ function Login() {
         setScopes(json.scopes);
       })
       .catch(error => {
-        error.text().then(errorMessage => {
+        getErrorMessage(error).then(errorMessage => {
           console.log("error=", errorMessage);
           const data = {
             email: username,
