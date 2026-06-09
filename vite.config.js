@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 
+const apiBaseUrl = 'https://localhost'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -18,37 +20,37 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/oauth2': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/portal/command': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/portal/query': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/google': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/facebook': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },
       '/github': {
-        target: 'https://local.lightapi.net',
+        target: apiBaseUrl,
         changeOrigin: true,
         secure: false,
       },

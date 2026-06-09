@@ -59,7 +59,7 @@ function Login() {
   const [scopes, setScopes] = useState([]);
 
   const getErrorMessageFallback = error => {
-    if (error && error.status) {
+    if (error && typeof error.status === 'number') {
       return `${error.status} ${error.statusText || 'Request failed'}`;
     }
     return (error && (error.statusText || error.message)) || 'Request failed';
@@ -98,8 +98,7 @@ function Login() {
       version: '0.1.0'
     };
     const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
-    const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
-    setError(message.replace('link', url));
+    setError(`Login Failed! Click <a href="${url}">here</a> to identify root cause.`);
   };
 
   useEffect(() => {
