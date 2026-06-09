@@ -58,14 +58,45 @@ function Login() {
   const [denyUrl, setDenyUrl] = useState(null);
   const [scopes, setScopes] = useState([]);
 
+  const getErrorMessageFallback = error => {
+    if (error && error.status) {
+      return `${error.status} ${error.statusText || 'Request failed'}`;
+    }
+    return (error && (error.statusText || error.message)) || 'Request failed';
+  };
+
   const getErrorMessage = error => {
+    const fallback = getErrorMessageFallback(error);
     if (error && typeof error.text === 'function') {
-      return error.text().catch(() => error.statusText || 'Request failed');
+      try {
+        return error.text()
+          .then(errorMessage => errorMessage || fallback)
+          .catch(() => fallback);
+      } catch {
+        return Promise.resolve(fallback);
+      }
     }
-    if (error && error.message) {
-      return Promise.resolve(error.message);
+    if (typeof error === 'string') {
+      return Promise.resolve(error || fallback);
     }
-    return Promise.resolve(String(error || 'Request failed'));
+    return Promise.resolve(fallback);
+  };
+
+  const showLoginFailureLink = () => {
+    const data = {
+      email: username,
+      password: password
+    };
+    const cmd = {
+      host: 'lightapi.net',
+      service: 'user',
+      action: 'loginUser',
+      version: '0.1.0',
+      data: data
+    };
+    const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
+    const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
+    setError(message.replace('link', url));
   };
 
   useEffect(() => {
@@ -247,22 +278,13 @@ function Login() {
         setScopes(json.scopes);
       })
       .catch(error => {
+        if (error && typeof error.text === 'function') {
+          showLoginFailureLink();
+          return;
+        }
         getErrorMessage(error).then(errorMessage => {
           console.log("error=", errorMessage);
-          const data = {
-            email: username,
-            password: password
-          };
-          const cmd = {
-            host: 'lightapi.net',
-            service: 'user',
-            action: 'loginUser',
-            version: '0.1.0',
-            data: data
-          };
-          const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
-          const message = 'Login Failed! Click <a href="link">here</a> to identify root cause.'
-          setError(message.replace('link', url));
+          setError(errorMessage);
         })
       });
   };
