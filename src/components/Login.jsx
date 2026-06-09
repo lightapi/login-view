@@ -65,29 +65,21 @@ function Login() {
     return (error && (error.statusText || error.message)) || 'Request failed';
   };
 
-  const escapeErrorMessage = value => String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
   const getErrorMessage = error => {
     const fallback = getErrorMessageFallback(error);
-    const safeFallback = escapeErrorMessage(fallback);
     if (error && typeof error.text === 'function') {
       try {
         return error.text()
-          .then(errorMessage => escapeErrorMessage(errorMessage || fallback))
-          .catch(() => safeFallback);
+          .then(errorMessage => errorMessage || fallback)
+          .catch(() => fallback);
       } catch {
-        return Promise.resolve(safeFallback);
+        return Promise.resolve(fallback);
       }
     }
     if (typeof error === 'string') {
-      return Promise.resolve(escapeErrorMessage(error || fallback));
+      return Promise.resolve(error || fallback);
     }
-    return Promise.resolve(safeFallback);
+    return Promise.resolve(fallback);
   };
 
   const showLoginFailureLink = () => {
@@ -98,7 +90,11 @@ function Login() {
       version: '0.1.0'
     };
     const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
-    setError(`Login Failed! Click <a href="${url}">here</a> to identify root cause.`);
+    setError(
+      <span>
+        Login Failed! Click <a href={url}>here</a> to identify root cause.
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -136,7 +132,7 @@ function Login() {
       })
       .catch(error => {
         console.log("error=", error);
-        setError(escapeErrorMessage(error.toString()));
+        setError(error.toString());
       });
   }
 
