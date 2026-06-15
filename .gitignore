@@ -105,3 +105,7 @@ dist
 
 # yarn.lock
 yarn.lock
+.gitnexus
+.claude/
+AGENTS.md
+CLAUDE.md
