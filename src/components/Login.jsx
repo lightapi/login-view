@@ -51,7 +51,7 @@ function Login() {
   const [remember, setRemember] = useState(false);
   const [state, setState] = useState('');
   const [clientId, setClientId] = useState('');
-  const [userType, setUserType] = useState('C');
+  const [userType, setUserType] = useState('E');
   const [redirectUri, setRedirectUri] = useState('');
   const [error, setError] = useState('');
   const [redirectUrl, setRedirectUrl] = useState(null);
@@ -101,7 +101,7 @@ function Login() {
     const params = new URLSearchParams(window.location.search);
     setState(params.get('state') || '');
     setClientId(params.get('client_id') || '');
-    setUserType(params.get('user_type') || 'C');
+    setUserType(params.get('user_type') || 'E');
     setRedirectUri(params.get('redirect_uri') || '');
   }, []);
 
