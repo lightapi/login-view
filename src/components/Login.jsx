@@ -82,17 +82,48 @@ function Login() {
     return Promise.resolve(fallback);
   };
 
-  const showLoginFailureLink = () => {
-    const cmd = {
-      host: 'lightapi.net',
-      service: 'user',
-      action: 'loginUser',
-      version: '0.1.0'
+  const buildLoginFailureCommand = () => ({
+    host: 'lightapi.net',
+    service: 'user',
+    action: 'loginUser',
+    version: '0.1.0',
+    data: {
+      email: username,
+      password: password
+    }
+  });
+
+  const handleLoginFailureDetails = () => {
+    const headers = {
+      'Content-Type': 'application/json'
     };
-    const url = '/portal/query?cmd=' + encodeURIComponent(JSON.stringify(cmd));
+
+    fetch('/portal/query', {
+      method: 'POST',
+      credentials: 'include',
+      headers: headers,
+      body: JSON.stringify(buildLoginFailureCommand())
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw response;
+        }
+        return response.text();
+      })
+      .then(responseText => {
+        setError(responseText || 'No root cause details returned.');
+      })
+      .catch(error => {
+        getErrorMessage(error).then(errorMessage => {
+          setError(errorMessage);
+        })
+      });
+  };
+
+  const showLoginFailureAction = () => {
     setError(
       <span>
-        Login Failed! <a href={url}>View root cause details</a>.
+        Login Failed! <Button size="small" onClick={handleLoginFailureDetails}>View root cause details</Button>.
       </span>
     );
   };
@@ -277,7 +308,7 @@ function Login() {
       })
       .catch(error => {
         if (error && typeof error.text === 'function') {
-          showLoginFailureLink();
+          showLoginFailureAction();
           return;
         }
         getErrorMessage(error).then(errorMessage => {
