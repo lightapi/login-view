@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Avatar, Button, CssBaseline, TextField, MenuItem, Select, FormControl,
@@ -12,6 +12,7 @@ import ErrorMessage from './ErrorMessage';
 import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
 import GithubLogin from './GithubLogin';
+import { cancelConsent } from '../api/logout';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -149,18 +150,8 @@ function Login() {
     // here we use the redirectUrl to construct the deny url because the cookies
     // are saved to the redirect domain instead of signin.lightapi.net domain.
     //console.log("redirectUrl = ", redirectUrl);
-    let pathArray = redirectUrl.split('/');
-    let logoutPath = pathArray[0] + '//' + pathArray[2] + '/logout';
-    //console.log("fetch url = ", logoutPath);
     // remove the server set cookies as the Javascript cannot access some of them. 
-    fetch(logoutPath, { credentials: 'include' })
-      .then(response => {
-        if (response.ok) {
-          window.location.href = denyUrl;
-        } else {
-          throw Error(response.statusText);
-        }
-      })
+    cancelConsent(redirectUrl, denyUrl)
       .catch(error => {
         console.log("error=", error);
         setError(error.toString());
