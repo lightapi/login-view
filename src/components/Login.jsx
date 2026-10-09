@@ -13,6 +13,7 @@ import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
 import GithubLogin from './GithubLogin';
 import { cancelConsent } from '../api/logout';
+import { googleEndpoint, submitGoogleCredential } from '../api/googleSignIn';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -171,31 +172,21 @@ function Login() {
     )
   }
 
-  const onGoogleSuccess = (res) => {
-    console.log('Google Login Success: authorization code:', res.code);
-    console.log('referrer: ', document.referrer);
-    let pathArray = document.referrer.split('/');
-    let host = pathArray[0] + '//' + pathArray[2];
-    console.log('host = ', host);
-    fetch(host + '/google?code=' + res.code, { redirect: 'follow', credentials: 'include' })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response;
-        }
-      })
-      .then(data => {
-        console.log("data =", data);
-        setRedirectUrl(data.redirectUri);
-        setDenyUrl(data.denyUri);
-        setScopes(data.scopes);
-      })
-      .catch(err => {
-        getErrorMessage(err).then(errorMessage => {
-          setError(errorMessage);
-        })
-      });
+  const googleLink = new URLSearchParams(window.location.search).get('link_google') === '1';
+  let googleUrl = null;
+  try { googleUrl = googleEndpoint(import.meta.env.VITE_PORTAL_ORIGIN, googleLink); }
+  catch { /* Google sign-in stays disabled until the deployment configures its origin. */ }
+
+  const onGoogleSuccess = async (response) => {
+    try {
+      const data = await submitGoogleCredential(googleUrl, response.credential, state);
+      setRedirectUrl(data.redirectUri);
+      setDenyUrl(data.denyUri);
+      setScopes(data.scopes);
+      if (data.linked) window.location.href = data.redirectUri;
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   const onGithubSuccess = (res) => {
@@ -349,6 +340,22 @@ function Login() {
     )
   }
 
+  if (googleLink) {
+    return (
+      <Container component="main" maxWidth="xs">
+        <CssBaseline />
+        <div className={classes.paper}>
+          <Typography component="h1" variant="h5">Link your Google account</Typography>
+          <Typography>Sign in to Portal first, then choose the Google account to link. Your existing account and permissions are preserved.</Typography>
+          <ErrorMessage error={error} />
+          {googleUrl ? <GoogleLogin endpoint={googleUrl} onSuccess={onGoogleSuccess} onError={setError} />
+            : <Typography>Google sign-in is not configured.</Typography>}
+          <Link to="/">Back to sign in</Link>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
@@ -434,8 +441,12 @@ function Login() {
           </Button>
         </form>
         <div>Forget your password? <Link to="/forget">Reset Here</Link></div>
+        {googleUrl && <div>Already signed in to Portal? <a href="?link_google=1">Link your Google account</a></div>}
         <div className={classes.loginButtons}>
-          <GoogleLogin onSuccess={onGoogleSuccess} />
+          {googleUrl ? <>
+            {googleLink && <Typography>Link Google to your signed-in Portal account. This keeps your existing account and permissions.</Typography>}
+            <GoogleLogin endpoint={googleUrl} onSuccess={onGoogleSuccess} onError={setError} />
+          </> : <Typography>Google sign-in is not configured.</Typography>}
           <FbLogin onSuccess={onFacebookSuccess} />
           <GithubLogin onSuccess={onGithubSuccess} />
         </div>

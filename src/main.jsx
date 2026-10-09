@@ -17,7 +17,7 @@ const root = createRoot(container);
 root.render(
   <StrictMode>
     <HashRouter>
-      <GoogleOAuthProvider clientId="654131058807-15p8l5r4ddlusbeavvhiin9rt2cuglh6.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "654131058807-15p8l5r4ddlusbeavvhiin9rt2cuglh6.apps.googleusercontent.com"}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <App />
