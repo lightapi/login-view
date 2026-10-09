@@ -13,7 +13,7 @@ import GoogleLogin from './GoogleLogin';
 import FbLogin from './FbLogin';
 import GithubLogin from './GithubLogin';
 import { cancelConsent } from '../api/logout';
-import { googleEndpoint, submitGoogleCredential } from '../api/googleSignIn';
+import { googleEndpoint, googleModeUrl, submitGoogleCredential } from '../api/googleSignIn';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
@@ -59,6 +59,7 @@ function Login() {
   const [redirectUrl, setRedirectUrl] = useState(null);
   const [denyUrl, setDenyUrl] = useState(null);
   const [scopes, setScopes] = useState([]);
+  const [googleMessage, setGoogleMessage] = useState('');
 
   const getErrorMessageFallback = error => {
     if (error && typeof error.status === 'number') {
@@ -179,11 +180,16 @@ function Login() {
 
   const onGoogleSuccess = async (response) => {
     try {
-      const data = await submitGoogleCredential(googleUrl, response.credential, state);
+      const data = await submitGoogleCredential(googleUrl, response.credential, state, response.challengeId);
+      if (data.linked) {
+        if (data.redirectUri) window.location.assign(data.redirectUri);
+        else setGoogleMessage('Google account linked. Return to Portal.');
+        return;
+      }
+      if (!data.redirectUri) { setGoogleMessage('Signed in. Return to Portal.'); return; }
       setRedirectUrl(data.redirectUri);
       setDenyUrl(data.denyUri);
       setScopes(data.scopes);
-      if (data.linked) window.location.href = data.redirectUri;
     } catch (error) {
       setError(error.message);
     }
@@ -348,9 +354,10 @@ function Login() {
           <Typography component="h1" variant="h5">Link your Google account</Typography>
           <Typography>Sign in to Portal first, then choose the Google account to link. Your existing account and permissions are preserved.</Typography>
           <ErrorMessage error={error} />
+          <Typography role="status">{googleMessage}</Typography>
           {googleUrl ? <GoogleLogin endpoint={googleUrl} onSuccess={onGoogleSuccess} onError={setError} />
             : <Typography>Google sign-in is not configured.</Typography>}
-          <Link to="/">Back to sign in</Link>
+          <a href={googleModeUrl(window.location.href, false)}>Back to sign in</a>
         </div>
       </Container>
     );
@@ -367,6 +374,7 @@ function Login() {
           Sign in
         </Typography>
         <ErrorMessage error={error} />
+        <Typography role="status">{googleMessage}</Typography>
         <form className={classes.form} noValidate onSubmit={handleSubmit}>
           <TextField
             variant="outlined"
@@ -441,12 +449,10 @@ function Login() {
           </Button>
         </form>
         <div>Forget your password? <Link to="/forget">Reset Here</Link></div>
-        {googleUrl && <div>Already signed in to Portal? <a href="?link_google=1">Link your Google account</a></div>}
+        {googleUrl && <div>Already signed in to Portal? <a href={googleModeUrl(window.location.href, true)}>Link your Google account</a></div>}
         <div className={classes.loginButtons}>
-          {googleUrl ? <>
-            {googleLink && <Typography>Link Google to your signed-in Portal account. This keeps your existing account and permissions.</Typography>}
-            <GoogleLogin endpoint={googleUrl} onSuccess={onGoogleSuccess} onError={setError} />
-          </> : <Typography>Google sign-in is not configured.</Typography>}
+          {googleUrl ? <GoogleLogin endpoint={googleUrl} onSuccess={onGoogleSuccess} onError={setError} />
+            : <Typography>Google sign-in is not configured.</Typography>}
           <FbLogin onSuccess={onFacebookSuccess} />
           <GithubLogin onSuccess={onGithubSuccess} />
         </div>

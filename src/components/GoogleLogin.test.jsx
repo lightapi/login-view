@@ -22,14 +22,14 @@ describe('GIS Google button', () => {
     let resolve;
     fixture.challenge.mockReturnValue(new Promise(done => { resolve = done; }));
     await render(); expect(fixture.props).toBeNull();
-    await act(async () => resolve('server-nonce'));
+    await act(async () => resolve({ nonce: 'server-nonce', challengeId: 'first-id' }));
     expect(fixture.props.nonce).toBe('server-nonce'); expect(fixture.props.use_fedcm_for_button).toBe(true);
   });
   it('submits the credential then obtains a fresh challenge', async () => {
-    fixture.challenge.mockResolvedValueOnce('first').mockResolvedValueOnce('second');
+    fixture.challenge.mockResolvedValueOnce({ nonce: 'first', challengeId: 'first-id' }).mockResolvedValueOnce({ nonce: 'second', challengeId: 'second-id' });
     const submit = vi.fn().mockResolvedValue(undefined); await render(submit);
     await act(async () => fixture.props.onSuccess({ credential: 'private-token' }));
-    expect(submit).toHaveBeenCalledWith({ credential: 'private-token' });
+    expect(submit).toHaveBeenCalledWith({ credential: 'private-token', challengeId: 'first-id' });
     expect(fixture.props.nonce).toBe('second'); expect(fixture.challenge).toHaveBeenCalledTimes(2);
   });
   it('fails without rendering GIS and aborts the request on unmount', async () => {

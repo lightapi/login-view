@@ -16,3 +16,5 @@ Sign-in posts to `/google`. To link Google to an existing Portal account, sign i
 Deploy alongside https://github.com/networknt/light-spa-4j/issues/171 and https://github.com/lightapi/light-portal/issues/865. Apply the Portal SQL migration and service-principal configuration first; enable the matching gateway and UI together. Configure exact-origin credentialed CORS for `/google` and `/google/link`, sticky gateway routing, and cookie-compatible hosting. A challenge expires after five minutes; retries obtain a fresh challenge. Browsers that block third-party cookies may need same-site hosting.
 
 API tests exercise nonce validation, fixed-origin routing, and POST-only credential transport. They do not make real Google calls. Qualify the paired deployment with a real Google test account before production activation.
+
+Each attempt keeps its own challenge ID and nonce cookie; callbacks send the challenge ID. A successful link navigates directly without displaying consent. Back to sign in removes `link_google` from the query while preserving state and the hash route. Rate limits and service outages have distinct messages from account-link conflicts.
